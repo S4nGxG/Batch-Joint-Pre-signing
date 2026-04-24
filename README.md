@@ -38,34 +38,46 @@ bjp_experiment/
 Recommended dependencies from the guide:
 
 ```bash
-python3 -m pip install numpy scipy matplotlib seaborn pandas coincurve
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install numpy scipy matplotlib seaborn pandas coincurve
 ```
-
-`coincurve` is optional in this scaffold. If it is unavailable, the repository
-falls back to a deterministic toy public-key representation so the transport and
-benchmark scripts can still run.
 
 ## Quick Start
 
 From inside `bjp_experiment/`:
 
 ```bash
-python3 experiments/e1_latency.py
-python3 experiments/e2_messages.py
-python3 experiments/e3_scalability.py
-python3 experiments/e4_crypto.py
-python3 experiments/e5_full_cycle.py
+python experiments/e1_latency.py
+python experiments/e2_messages.py
+python experiments/e3_scalability.py
+python experiments/e4_crypto.py
+python experiments/e5_full_cycle.py
 ```
 
 Outputs are written under:
 
-- `results/` for JSON summaries
-- `plots/` for charts
+- `results/e1_latency.json`
+- `results/e2_messages.json`
+- `results/e3_scalability.json`
+- `results/e4_crypto.json`
+- `results/e5_full_cycle.json`
+- `plots/e1_latency_distribution.png`
+- `plots/e2_communication.png`
+- `plots/e3_scalability.png`
+- `plots/e4_crypto.png`
+- `plots/e5_full_cycle.png`
 
-## Notes
+## Experiments
 
-- The scaffold intentionally mirrors the code style suggested in `HD.pdf`.
-- `pre_verify()` remains simplified, matching the guide's note that it is a
-  placeholder for the full ECC relation check from the paper.
-- This is a prototype for experimentation and reporting, not a hardened
-  implementation for deployment.
+- `E1` compares end-to-end latency between `Sequential` and `BJP`, then saves a
+  violin plot plus box plot.
+- `E2` measures real bidirectional message counts and byte counts from the TCP
+  session, then saves a grouped bar chart.
+- `E3` evaluates scalability by sweeping `k` and plotting median latency for
+  `Sequential` and `BJP`.
+- `E4` measures isolated cryptographic cost and saves a bar chart over `k`.
+- `E5` simulates a full pre-swap cycle for multiple `n` values and saves a line
+  chart for median pre-swap time.
+
