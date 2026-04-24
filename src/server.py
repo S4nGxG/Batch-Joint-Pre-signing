@@ -11,9 +11,10 @@ from bjp import deserialize_batch, serialize_pre_sigs
 
 
 class BJPServer:
-    def __init__(self, host: str = "127.0.0.1", port: int = 9000):
+    def __init__(self, host: str = "127.0.0.1", port: int = 9000, counter=None):
         self.host = host
         self.port = port
+        self.counter = counter
         self.sk, self.pk = keygen()
 
     async def handle_batch(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -21,6 +22,8 @@ class BJPServer:
 
         try:
             raw = await reader.read(65536)
+            if self.counter is not None:
+                self.counter.log_recv(raw)
             if not raw:
                 return 0.0
 
@@ -34,11 +37,18 @@ class BJPServer:
 
             response = self._serialize_pre_sigs(pre_sigs)
             writer.write(response)
+            if self.counter is not None:
+                self.counter.log_send(response)
             await writer.drain()
 
-            await reader.read(1024)
+            ack = await reader.read(1024)
+            if self.counter is not None:
+                self.counter.log_recv(ack)
 
-            writer.write(b"\x01")
+            final_ack = b"\x01"
+            writer.write(final_ack)
+            if self.counter is not None:
+                self.counter.log_send(final_ack)
             await writer.drain()
             return t_crypto
         finally:

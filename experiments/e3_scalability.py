@@ -10,7 +10,7 @@ import asyncio
 
 import numpy as np
 
-from utils import default_batch_items, running_bjp_server, save_json
+from utils import PLOTS_DIR, default_batch_items, plot_e3_scalability, running_bjp_server, save_json
 
 from client import BJPClient
 from sequential import SequentialClient
@@ -49,4 +49,5 @@ async def run_scalability(k_values=None, n_trials=50, host="127.0.0.1", port=900
 if __name__ == "__main__":
     payload = asyncio.run(run_scalability())
     save_json("e3_scalability.json", payload)
+    plot_e3_scalability(payload, PLOTS_DIR / "e3_scalability.png")
     print(payload)

@@ -10,7 +10,7 @@ import asyncio
 
 import numpy as np
 
-from utils import default_batch_items, running_bjp_server, save_json
+from utils import PLOTS_DIR, default_batch_items, plot_e5_full_cycle, running_bjp_server, save_json
 
 from client import BJPClient
 from sequential import SequentialClient
@@ -65,10 +65,10 @@ async def simulate_preswap(n, n_trials=30, host="127.0.0.1", port=9000):
     }
 
 
-if __name__ == "__main__":
+async def main():
     results = []
     for n in [3, 5, 8]:
-        result = asyncio.run(simulate_preswap(n))
+        result = await simulate_preswap(n)
         results.append(result)
         print(
             f"n={result['n']}, k={result['k']}, p={result['p']}: "
@@ -77,3 +77,8 @@ if __name__ == "__main__":
         )
 
     save_json("e5_full_cycle.json", results)
+    plot_e5_full_cycle(results, PLOTS_DIR / "e5_full_cycle.png")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

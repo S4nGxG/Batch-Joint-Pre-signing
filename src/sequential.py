@@ -12,14 +12,14 @@ class SequentialClient:
         self.server_host = server_host
         self.server_port = server_port
 
-    async def single_pre_sign(self, item):
+    async def single_pre_sign(self, item, counter=None):
         client = BJPClient(server_host=self.server_host, server_port=self.server_port)
-        _, timing = await client.batch_pre_sign([item])
+        _, timing = await client.batch_pre_sign([item], counter=counter)
         timing["messages_sent"] = 2
         timing["messages_recv"] = 2
         return timing
 
-    async def run_batch(self, batch_items):
+    async def run_batch(self, batch_items, counter=None):
         total_ms = 0.0
         transport_ms = 0.0
         verify_ms = 0.0
@@ -27,7 +27,7 @@ class SequentialClient:
         recv_bytes = 0
 
         for item in batch_items:
-            timing = await self.single_pre_sign(item)
+            timing = await self.single_pre_sign(item, counter=counter)
             total_ms += timing["total_ms"]
             transport_ms += timing["transport_ms"]
             verify_ms += timing["verify_ms"]

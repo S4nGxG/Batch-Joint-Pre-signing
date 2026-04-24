@@ -10,7 +10,7 @@ import time
 
 import numpy as np
 
-from utils import default_batch_items, save_json
+from utils import PLOTS_DIR, default_batch_items, plot_e4_crypto, save_json
 
 from adaptor_sig import keygen, pre_sign, pre_verify
 
@@ -37,4 +37,5 @@ def measure_crypto_cost(k, n_trials=100):
 if __name__ == "__main__":
     payload = {str(k): measure_crypto_cost(k) for k in [1, 2, 4, 8, 16]}
     save_json("e4_crypto.json", payload)
+    plot_e4_crypto(payload, PLOTS_DIR / "e4_crypto.png")
     print(payload)

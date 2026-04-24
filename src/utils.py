@@ -43,10 +43,10 @@ def experiment_path_setup():
 
 
 @asynccontextmanager
-async def running_bjp_server(host: str = "127.0.0.1", port: int = 9000):
+async def running_bjp_server(host: str = "127.0.0.1", port: int = 9000, **server_kwargs):
     from server import BJPServer
 
-    server = BJPServer(host=host, port=port)
+    server = BJPServer(host=host, port=port, **server_kwargs)
     task = asyncio.create_task(server.run())
     await asyncio.sleep(0.05)
     try:
@@ -76,6 +76,101 @@ def plot_latency_distribution(seq_times, bjp_times, output_path):
     axes[1].boxplot([seq_times, bjp_times], labels=["Sequential", "BJP"])
     axes[1].set_ylabel("Latency (ms)")
     axes[1].set_title("Latency Comparison")
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e2_communication(payload, output_path):
+    import matplotlib.pyplot as plt
+
+    labels = ["Messages", "Sent Bytes", "Received Bytes"]
+    sequential = [
+        payload["sequential"]["messages_bidirectional"],
+        payload["sequential"]["sent_bytes"],
+        payload["sequential"]["received_bytes"],
+    ]
+    bjp = [
+        payload["bjp"]["messages_bidirectional"],
+        payload["bjp"]["sent_bytes"],
+        payload["bjp"]["received_bytes"],
+    ]
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    x = range(len(labels))
+    width = 0.35
+    ax.bar([i - width / 2 for i in x], sequential, width=width, label="Sequential")
+    ax.bar([i + width / 2 for i in x], bjp, width=width, label="BJP")
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Count")
+    ax.set_title(f"Communication Overhead (k={payload['k']})")
+    ax.legend()
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e3_scalability(results, output_path):
+    import matplotlib.pyplot as plt
+
+    k_values = sorted(int(k) for k in results.keys())
+    seq = [results[k]["seq_median"] for k in k_values]
+    bjp = [results[k]["bjp_median"] for k in k_values]
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(k_values, seq, marker="o", label="Sequential")
+    ax.plot(k_values, bjp, marker="s", label="BJP")
+    ax.set_xlabel("k")
+    ax.set_ylabel("Median Latency (ms)")
+    ax.set_title("Scalability by Batch Size")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e4_crypto(payload, output_path):
+    import matplotlib.pyplot as plt
+
+    k_values = [int(k) for k in payload.keys()]
+    values = [payload[str(k)] for k in k_values]
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(k_values, values, width=0.8)
+    ax.set_xlabel("k")
+    ax.set_ylabel("Median Crypto Cost (ms)")
+    ax.set_title("Cryptographic Cost by Batch Size")
+    ax.grid(True, axis="y", alpha=0.3)
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e5_full_cycle(results, output_path):
+    import matplotlib.pyplot as plt
+
+    n_values = [item["n"] for item in results]
+    seq = [item["seq_median"] for item in results]
+    bjp = [item["bjp_median"] for item in results]
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(n_values, seq, marker="o", label="Sequential")
+    ax.plot(n_values, bjp, marker="s", label="BJP")
+    ax.set_xlabel("n Participants")
+    ax.set_ylabel("Median Pre-swap Time (ms)")
+    ax.set_title("Full Pre-swap Cycle Simulation")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
 
     plt.tight_layout()
     ensure_dir(Path(output_path).parent)

@@ -16,7 +16,7 @@ class BJPClient:
         self.server_port = server_port
         self.sk, self.pk = keygen()
 
-    async def batch_pre_sign(self, batch_items):
+    async def batch_pre_sign(self, batch_items, counter=None):
         """
         Thực hiện BJP cho k items.
         batch_items: list of (msg, Y_bytes)
@@ -29,9 +29,13 @@ class BJPClient:
         init_payload = self._serialize_batch(batch_items)
         t_send = time.perf_counter()
         writer.write(init_payload)
+        if counter is not None:
+            counter.log_send(init_payload)
         await writer.drain()
 
         raw_response = await reader.read(65536)
+        if counter is not None:
+            counter.log_recv(raw_response)
         t_recv = time.perf_counter()
         pre_sigs = self._deserialize_pre_sigs(raw_response)
 
@@ -42,10 +46,15 @@ class BJPClient:
             ), f"Pre-signature item {i} failed verification"
         t_verify = time.perf_counter() - t_verify_start
 
-        writer.write(b"\x01" * len(batch_items))
+        ack_payload = b"\x01" * len(batch_items)
+        writer.write(ack_payload)
+        if counter is not None:
+            counter.log_send(ack_payload)
         await writer.drain()
 
-        await reader.read(1)
+        final_ack = await reader.read(1)
+        if counter is not None:
+            counter.log_recv(final_ack)
         t_end = time.perf_counter()
 
         writer.close()
@@ -55,8 +64,8 @@ class BJPClient:
             "total_ms": (t_end - t_start) * 1000,
             "transport_ms": (t_recv - t_send) * 1000,
             "verify_ms": t_verify * 1000,
-            "sent_bytes": len(init_payload),
-            "recv_bytes": len(raw_response),
+            "sent_bytes": len(init_payload) + len(ack_payload),
+            "recv_bytes": len(raw_response) + len(final_ack),
             "messages_sent": 2,
             "messages_recv": 2,
         }
