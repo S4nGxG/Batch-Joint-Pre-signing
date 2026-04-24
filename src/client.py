@@ -16,7 +16,7 @@ class BJPClient:
         self.server_port = server_port
         self.sk, self.pk = keygen()
 
-    async def batch_pre_sign(self, batch_items, counter=None):
+    async def batch_pre_sign(self, batch_items, counter=None, verify=True):
         """
         Thực hiện BJP cho k items.
         batch_items: list of (msg, Y_bytes)
@@ -40,10 +40,18 @@ class BJPClient:
         pre_sigs = self._deserialize_pre_sigs(raw_response)
 
         t_verify_start = time.perf_counter()
-        for i, (pre_sig, (msg, Y_bytes)) in enumerate(zip(pre_sigs, batch_items)):
-            assert pre_verify(
-                self.pk.format(compressed=True), msg, Y_bytes, pre_sig
-            ), f"Pre-signature item {i} failed verification"
+        failed_index = None
+        verify_ok = True
+        if verify:
+            for i, (pre_sig, (msg, Y_bytes)) in enumerate(zip(pre_sigs, batch_items)):
+                if not pre_verify(self.pk.format(compressed=True), msg, Y_bytes, pre_sig):
+                    verify_ok = False
+                    failed_index = i
+                    break
+            if verify_ok and len(pre_sigs) != len(batch_items):
+                verify_ok = False
+                failed_index = min(len(pre_sigs), len(batch_items))
+            assert verify_ok, f"Pre-signature item {failed_index} failed verification"
         t_verify = time.perf_counter() - t_verify_start
 
         ack_payload = b"\x01" * len(batch_items)
@@ -68,6 +76,8 @@ class BJPClient:
             "recv_bytes": len(raw_response) + len(final_ack),
             "messages_sent": 2,
             "messages_recv": 2,
+            "verify_ok": verify_ok,
+            "failed_index": failed_index,
         }
         return pre_sigs, timing
 

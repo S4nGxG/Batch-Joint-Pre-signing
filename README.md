@@ -9,6 +9,8 @@ layout suggested in the guide and keeps the same experimental breakdown:
 - `E3`: scalability with batch size `k`
 - `E4`: isolated ECC / cryptographic cost
 - `E5`: full `Pre-swap` cycle simulation
+- `E7`: packet-loss sensitivity analysis
+- `E8`: batch-failure recovery overhead
 
 ## Structure
 
@@ -26,7 +28,9 @@ bjp_experiment/
 │   ├── e2_messages.py
 │   ├── e3_scalability.py
 │   ├── e4_crypto.py
-│   └── e5_full_cycle.py
+│   ├── e5_full_cycle.py
+│   ├── e7_loss_sensitivity.py
+│   └── e8_batch_failure.py
 ├── results/
 └── plots/
 ```
@@ -52,6 +56,8 @@ python experiments/e2_messages.py
 python experiments/e3_scalability.py
 python experiments/e4_crypto.py
 python experiments/e5_full_cycle.py
+sudo python experiments/e7_loss_sensitivity.py
+python experiments/e8_batch_failure.py
 ```
 
 Outputs are written under:
@@ -61,11 +67,15 @@ Outputs are written under:
 - `results/e3_scalability.json`
 - `results/e4_crypto.json`
 - `results/e5_full_cycle.json`
+- `results/e7_loss_sensitivity.json`
+- `results/e8_batch_failure.json`
 - `plots/e1_latency_distribution.png`
 - `plots/e2_communication.png`
 - `plots/e3_scalability.png`
 - `plots/e4_crypto.png`
 - `plots/e5_full_cycle.png`
+- `plots/e7_loss_sensitivity.png`
+- `plots/e8_batch_failure.png`
 
 ## Experiments
 
@@ -78,4 +88,8 @@ Outputs are written under:
 - `E4` measures isolated cryptographic cost and saves a bar chart over `k`.
 - `E5` simulates a full pre-swap cycle for multiple `n` values and saves a line
   chart for median pre-swap time.
+- `E7` sweeps several packet-loss rates with `tc netem`, reruns the latency
+  benchmark, and saves a loss-sensitivity figure.
+- `E8` injects one faulty pre-signature, measures detection and retry cost, and
+  compares recovery overhead between `Sequential` and `BJP`.
 

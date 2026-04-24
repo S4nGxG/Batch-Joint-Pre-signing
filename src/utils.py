@@ -37,6 +37,12 @@ def save_json(filename: str, payload) -> Path:
     return path
 
 
+def load_json(filename: str):
+    path = RESULTS_DIR / filename
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def experiment_path_setup():
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
@@ -76,6 +82,40 @@ def plot_latency_distribution(seq_times, bjp_times, output_path):
     axes[1].boxplot([seq_times, bjp_times], labels=["Sequential", "BJP"])
     axes[1].set_ylabel("Latency (ms)")
     axes[1].set_title("Latency Comparison")
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_hd_63_summary(seq_times, bjp_times, scalability_results, output_path):
+    import matplotlib.pyplot as plt
+
+    try:
+        import seaborn as sns  # noqa: F401
+    except ImportError:  # pragma: no cover - optional
+        sns = None
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    axes[0].violinplot([seq_times, bjp_times], positions=[0, 1])
+    axes[0].set_xticks([0, 1])
+    axes[0].set_xticklabels(["Sequential", "BJP"])
+    axes[0].set_ylabel("Latency (ms)")
+    axes[0].set_title("Session Latency Distribution")
+
+    normalized = {int(k): value for k, value in scalability_results.items()}
+    k_values = sorted(normalized.keys())
+    seq = [normalized[k]["seq_median"] for k in k_values]
+    bjp = [normalized[k]["bjp_median"] for k in k_values]
+    axes[1].plot(k_values, seq, marker="o", label="Sequential")
+    axes[1].plot(k_values, bjp, marker="s", label="BJP")
+    axes[1].set_xlabel("k")
+    axes[1].set_ylabel("Median Latency (ms)")
+    axes[1].set_title("Scalability Plot")
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend()
 
     plt.tight_layout()
     ensure_dir(Path(output_path).parent)
@@ -171,6 +211,80 @@ def plot_e5_full_cycle(results, output_path):
     ax.set_title("Full Pre-swap Cycle Simulation")
     ax.grid(True, alpha=0.3)
     ax.legend()
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e7_loss_sensitivity(results, output_path):
+    import matplotlib.pyplot as plt
+
+    loss_values = [item["loss_pct"] for item in results]
+    seq = [item["seq_median"] for item in results]
+    bjp = [item["bjp_median"] for item in results]
+    reduction = [item["reduction_pct"] for item in results]
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    axes[0].plot(loss_values, seq, marker="o", label="Sequential")
+    axes[0].plot(loss_values, bjp, marker="s", label="BJP")
+    axes[0].set_xlabel("Packet Loss (%)")
+    axes[0].set_ylabel("Median Latency (ms)")
+    axes[0].set_title("Latency Under Packet Loss")
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
+
+    axes[1].plot(loss_values, reduction, marker="d", color="tab:green")
+    axes[1].set_xlabel("Packet Loss (%)")
+    axes[1].set_ylabel("Latency Reduction (%)")
+    axes[1].set_title("BJP Reduction vs Packet Loss")
+    axes[1].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    ensure_dir(Path(output_path).parent)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_e8_batch_failure(payload, output_path):
+    import matplotlib.pyplot as plt
+
+    labels = ["Clean", "Fault+Retry", "Retry Only", "Detect Only"]
+    sequential = [
+        payload["sequential"]["clean_median_ms"],
+        payload["sequential"]["fault_total_median_ms"],
+        payload["sequential"]["retry_median_ms"],
+        payload["sequential"]["detect_median_ms"],
+    ]
+    bjp = [
+        payload["bjp"]["clean_median_ms"],
+        payload["bjp"]["fault_total_median_ms"],
+        payload["bjp"]["retry_median_ms"],
+        payload["bjp"]["detect_median_ms"],
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    x = range(len(labels))
+    width = 0.35
+    axes[0].bar([i - width / 2 for i in x], sequential, width=width, label="Sequential")
+    axes[0].bar([i + width / 2 for i in x], bjp, width=width, label="BJP")
+    axes[0].set_xticks(list(x))
+    axes[0].set_xticklabels(labels, rotation=15)
+    axes[0].set_ylabel("Median Time (ms)")
+    axes[0].set_title("Batch Failure Recovery Cost")
+    axes[0].legend()
+
+    overheads = [
+        payload["sequential"]["overhead_pct"],
+        payload["bjp"]["overhead_pct"],
+    ]
+    axes[1].bar(["Sequential", "BJP"], overheads, color=["tab:blue", "tab:orange"])
+    axes[1].set_ylabel("Overhead (%)")
+    axes[1].set_title("Recovery Overhead vs Clean Run")
+    axes[1].grid(True, axis="y", alpha=0.3)
 
     plt.tight_layout()
     ensure_dir(Path(output_path).parent)

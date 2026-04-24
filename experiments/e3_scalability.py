@@ -10,7 +10,15 @@ import asyncio
 
 import numpy as np
 
-from utils import PLOTS_DIR, default_batch_items, plot_e3_scalability, running_bjp_server, save_json
+from utils import (
+    PLOTS_DIR,
+    default_batch_items,
+    load_json,
+    plot_e3_scalability,
+    plot_hd_63_summary,
+    running_bjp_server,
+    save_json,
+)
 
 from client import BJPClient
 from sequential import SequentialClient
@@ -50,4 +58,14 @@ if __name__ == "__main__":
     payload = asyncio.run(run_scalability())
     save_json("e3_scalability.json", payload)
     plot_e3_scalability(payload, PLOTS_DIR / "e3_scalability.png")
+    try:
+        e1_payload = load_json("e1_latency.json")
+        plot_hd_63_summary(
+            e1_payload["sequential"],
+            e1_payload["bjp"],
+            payload,
+            PLOTS_DIR / "hd_6_3_summary.png",
+        )
+    except FileNotFoundError:
+        pass
     print(payload)

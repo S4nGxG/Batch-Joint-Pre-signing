@@ -1,0 +1,10 @@
+{
+  "alpha": 0.05,
+  "mann_whitney_u": 100.0,
+  "p_value_one_tailed": 2.50922711650892e-33,
+  "reject_h0": true,
+  "cohens_d": 3.008387892586563,
+  "medium_effect_or_better": true,
+  "conclusion": "Bac bo H0 - BJP cai thien dang ke",
+  "input_file": "/mnt/d/NT547-Blockchain/DoAn/bjp_experiment/results/e1_latency.json"
+}

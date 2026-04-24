@@ -10,7 +10,16 @@ import asyncio
 
 import numpy as np
 
-from utils import PLOTS_DIR, default_batch_items, median_reduction, plot_latency_distribution, running_bjp_server, save_json
+from utils import (
+    PLOTS_DIR,
+    default_batch_items,
+    load_json,
+    median_reduction,
+    plot_hd_63_summary,
+    plot_latency_distribution,
+    running_bjp_server,
+    save_json,
+)
 
 from client import BJPClient
 from sequential import SequentialClient
@@ -55,6 +64,16 @@ if __name__ == "__main__":
     plot_latency_distribution(
         results["sequential"], results["bjp"], PLOTS_DIR / "e1_latency_distribution.png"
     )
+    try:
+        e3_payload = load_json("e3_scalability.json")
+        plot_hd_63_summary(
+            results["sequential"],
+            results["bjp"],
+            e3_payload,
+            PLOTS_DIR / "hd_6_3_summary.png",
+        )
+    except FileNotFoundError:
+        pass
 
     print(f"Sequential: {seq_median:.3f} ms")
     print(f"BJP: {bjp_median:.3f} ms")
