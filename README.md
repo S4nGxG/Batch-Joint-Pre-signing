@@ -1,6 +1,4 @@
-# `bjp_experiment`
-
-Prototype repository scaffolded from the implementation guidance in `HD.pdf`.
+# `Batch Joint Pre-signing (BJP)`
 
 This project models `Batch Joint Pre-signing (BJP)` for the off-chain `Pre-swap`
 phase of ParaSwap-style multi-party atomic swaps. The code follows the module
