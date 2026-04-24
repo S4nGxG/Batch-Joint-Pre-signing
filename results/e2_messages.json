@@ -1,0 +1,24 @@
+{
+  "k": 8,
+  "sequential": {
+    "messages_bidirectional": 32,
+    "sent_bytes": 336,
+    "received_bytes": 544
+  },
+  "bjp": {
+    "messages_bidirectional": 4,
+    "sent_bytes": 322,
+    "received_bytes": 523
+  },
+  "reduction": {
+    "message_pct": 87.5,
+    "sent_bytes_pct": 4.1666666666666625,
+    "received_bytes_pct": 3.860294117647056
+  },
+  "consistency_check": {
+    "sequential_client_sent_eq_server_recv": true,
+    "sequential_client_recv_eq_server_sent": true,
+    "bjp_client_sent_eq_server_recv": true,
+    "bjp_client_recv_eq_server_sent": true
+  }
+}
