@@ -68,7 +68,7 @@ def plot_latency_distribution(seq_times, bjp_times, output_path):
 
     try:
         import seaborn as sns  # noqa: F401
-    except ImportError:  # pragma: no cover - optional
+    except Exception:  # pragma: no cover - optional
         sns = None
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -94,7 +94,7 @@ def plot_hd_63_summary(seq_times, bjp_times, scalability_results, output_path):
 
     try:
         import seaborn as sns  # noqa: F401
-    except ImportError:  # pragma: no cover - optional
+    except Exception:  # pragma: no cover - optional
         sns = None
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))

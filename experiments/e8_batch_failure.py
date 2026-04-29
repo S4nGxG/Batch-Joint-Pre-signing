@@ -124,7 +124,7 @@ def summarize(clean_samples, fault_samples):
     }
 
 
-async def run_e8(n_trials=20, k=8, fault_item_index=3, host="127.0.0.1", port=9000):
+async def run_e8(n_trials, k=8, fault_item_index=3, host="127.0.0.1", port=9000):
     seq_clean = []
     seq_fault = []
     bjp_clean = []

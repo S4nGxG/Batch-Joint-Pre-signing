@@ -1,10 +1,33 @@
 {
-  "alpha": 0.05,
-  "mann_whitney_u": 100.0,
-  "p_value_one_tailed": 2.50922711650892e-33,
-  "reject_h0": true,
-  "cohens_d": 3.008387892586563,
-  "medium_effect_or_better": true,
-  "conclusion": "Bac bo H0 - BJP cai thien dang ke",
-  "input_file": "/mnt/d/NT547-Blockchain/DoAn/bjp_experiment/results/e1_latency.json"
+  "input_file": "/mnt/d/NT547-Blockchain/DoAn/bjp_experiment/results/e1_latency.json",
+  "metrics": {
+    "client_latency": {
+      "alpha": 0.05,
+      "mann_whitney_u": 0.0,
+      "p_value_one_tailed": 1.2810718345817004e-34,
+      "reject_h0": true,
+      "cohens_d": 3.252556353465168,
+      "medium_effect_or_better": true,
+      "conclusion": "Bac bo H0 - BJP cai thien dang ke",
+      "seq_median_ms": 264.22877299933134,
+      "bjp_median_ms": 33.98955899979228,
+      "reduction_pct": 87.1363142575399,
+      "n_sequential": 100,
+      "n_bjp": 100
+    },
+    "transport_latency": {
+      "alpha": 0.05,
+      "mann_whitney_u": 0.0,
+      "p_value_one_tailed": 1.2810718345817004e-34,
+      "reject_h0": true,
+      "cohens_d": 3.281846733765843,
+      "medium_effect_or_better": true,
+      "conclusion": "Bac bo H0 - BJP cai thien dang ke",
+      "seq_median_ms": 89.1749764996348,
+      "bjp_median_ms": 12.016671500077791,
+      "reduction_pct": 86.52461489560694,
+      "n_sequential": 100,
+      "n_bjp": 100
+    }
+  }
 }

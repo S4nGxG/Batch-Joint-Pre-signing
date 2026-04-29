@@ -48,20 +48,63 @@ def statistical_test(seq_times, bjp_times, alpha=0.05):
     }
 
 
+def metric_payload(seq_times, bjp_times, alpha=0.05):
+    result = statistical_test(seq_times, bjp_times, alpha=alpha)
+    seq_median = float(np.median(seq_times))
+    bjp_median = float(np.median(bjp_times))
+    result.update(
+        {
+            "seq_median_ms": seq_median,
+            "bjp_median_ms": bjp_median,
+            "reduction_pct": (
+                0.0
+                if seq_median == 0
+                else float((seq_median - bjp_median) / seq_median * 100.0)
+            ),
+            "n_sequential": len(seq_times),
+            "n_bjp": len(bjp_times),
+        }
+    )
+    return result
+
+
 def load_latency_results(path):
     with Path(path).open("r", encoding="utf-8") as f:
         payload = json.load(f)
-    return payload["sequential"], payload["bjp"]
+
+    metrics = {
+        "client_latency": (payload["sequential"], payload["bjp"]),
+    }
+    if "sequential_transport" not in payload or "bjp_transport" not in payload:
+        raise KeyError(
+            "Missing transport latency samples. Re-run experiments/e1_latency.py "
+            "to generate sequential_transport and bjp_transport."
+        )
+    metrics["transport_latency"] = (
+        payload["sequential_transport"],
+        payload["bjp_transport"],
+    )
+    return metrics
 
 
 if __name__ == "__main__":
     input_path = ROOT / "results" / "e1_latency.json"
-    seq_times, bjp_times = load_latency_results(input_path)
-    payload = statistical_test(seq_times, bjp_times, alpha=0.05)
-    payload["input_file"] = str(input_path)
+    latency_metrics = load_latency_results(input_path)
+    payload = {
+        "input_file": str(input_path),
+        "metrics": {
+            name: metric_payload(seq_times, bjp_times, alpha=0.05)
+            for name, (seq_times, bjp_times) in latency_metrics.items()
+        },
+    }
     save_json("e6_stats.json", payload)
 
-    print(f"Mann-Whitney U statistic: {payload['mann_whitney_u']:.1f}")
-    print(f"p-value (one-tailed): {payload['p_value_one_tailed']:.6f}")
-    print(f"Cohen's d (effect size): {payload['cohens_d']:.3f}")
-    print(f"Conclusion: {payload['conclusion']}")
+    for name, result in payload["metrics"].items():
+        print(f"{name}:")
+        print(f"  Mann-Whitney U statistic: {result['mann_whitney_u']:.1f}")
+        print(f"  p-value (one-tailed): {result['p_value_one_tailed']:.6f}")
+        print(f"  Cohen's d (effect size): {result['cohens_d']:.3f}")
+        print(f"  Sequential median: {result['seq_median_ms']:.3f} ms")
+        print(f"  BJP median: {result['bjp_median_ms']:.3f} ms")
+        print(f"  Reduction: {result['reduction_pct']:.1f}%")
+        print(f"  Conclusion: {result['conclusion']}")

@@ -26,21 +26,30 @@ from sequential import SequentialClient
 
 
 async def run_e1(n_trials=100, k=8, host="127.0.0.1", port=9000):
-    results = {"sequential": [], "bjp": []}
+    results = {
+        "sequential": [],
+        "bjp": [],
+        "sequential_transport": [],
+        "bjp_transport": [],
+    }
     batch_items = default_batch_items(k)
 
     async with running_bjp_server(host=host, port=port):
         for _ in range(n_trials):
             seq_client = SequentialClient(server_host=host, server_port=port)
             seq_total_ms = 0.0
+            seq_transport_ms = 0.0
             for item in batch_items:
                 timing = await seq_client.single_pre_sign(item)
                 seq_total_ms += timing["total_ms"]
+                seq_transport_ms += timing["transport_ms"]
             results["sequential"].append(seq_total_ms)
+            results["sequential_transport"].append(seq_transport_ms)
 
             bjp_client = BJPClient(server_host=host, server_port=port)
             _, timing = await bjp_client.batch_pre_sign(batch_items)
             results["bjp"].append(timing["total_ms"])
+            results["bjp_transport"].append(timing["transport_ms"])
 
     return results
 
@@ -50,15 +59,23 @@ if __name__ == "__main__":
     seq_median = float(np.median(results["sequential"]))
     bjp_median = float(np.median(results["bjp"]))
     reduction = median_reduction(seq_median, bjp_median)
+    seq_transport_median = float(np.median(results["sequential_transport"]))
+    bjp_transport_median = float(np.median(results["bjp_transport"]))
+    transport_reduction = median_reduction(seq_transport_median, bjp_transport_median)
 
     save_json(
         "e1_latency.json",
         {
             "sequential": results["sequential"],
             "bjp": results["bjp"],
+            "sequential_transport": results["sequential_transport"],
+            "bjp_transport": results["bjp_transport"],
             "seq_median": seq_median,
             "bjp_median": bjp_median,
             "reduction_pct": reduction,
+            "seq_transport_median": seq_transport_median,
+            "bjp_transport_median": bjp_transport_median,
+            "transport_reduction_pct": transport_reduction,
         },
     )
     plot_latency_distribution(
@@ -75,6 +92,9 @@ if __name__ == "__main__":
     except FileNotFoundError:
         pass
 
-    print(f"Sequential: {seq_median:.3f} ms")
-    print(f"BJP: {bjp_median:.3f} ms")
-    print(f"Reduction: {reduction:.1f}%")
+    print(f"Sequential client: {seq_median:.3f} ms")
+    print(f"BJP client: {bjp_median:.3f} ms")
+    print(f"Client reduction: {reduction:.1f}%")
+    print(f"Sequential transport: {seq_transport_median:.3f} ms")
+    print(f"BJP transport: {bjp_transport_median:.3f} ms")
+    print(f"Transport reduction: {transport_reduction:.1f}%")
